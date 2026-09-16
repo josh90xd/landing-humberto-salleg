@@ -40,6 +40,7 @@ function rewriteForProjectPages(html) {
     .replaceAll('url("/', `url("${siteBase}/`)
     .replaceAll("url('/", `url('${siteBase}/`)
     .replaceAll("url(/", `url(${siteBase}/`)
+    .replaceAll("/_next/static/", `${siteBase}/_next/static/`)
     .replaceAll('href=\\u0022/', `href=\\u0022${siteBase}/`)
     .replaceAll('src=\\u0022/', `src=\\u0022${siteBase}/`)
     .replaceAll('url(\\u0022/', `url(\\u0022${siteBase}/`)
