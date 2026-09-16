@@ -47,7 +47,7 @@ test("site source keeps real-content guardrails", async () => {
 
   assert.match(page, /No se muestran resultados ficticios/);
   assert.match(page, /testimonios verificados/);
-  assert.match(page, /Fotografia editorial del doctor pendiente/);
+  assert.match(page, /doctor-editorial\.png/);
   assert.match(layout, /lang="es"/);
   assert.doesNotMatch(page, /pacientes atendidos|años de experiencia/i);
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
@@ -36,12 +37,13 @@ const specialties = [
 ];
 
 const treatments = [
+  "Ortodoncia invisible",
+  "Diseño de sonrisa",
   "Ortodoncia",
   "Alineacion dental",
   "Mordida profunda",
   "Apiñamiento severo",
   "Clase III con microtornillos",
-  "Valoracion estetica",
 ];
 
 const process = [
@@ -67,6 +69,26 @@ const quickReplies = [
   "Hablar con alguien",
 ];
 
+const whatsappMessage =
+  "Hola Dr. Humberto Salleg, quiero agendar una consulta odontologica. Me gustaria recibir informacion sobre disponibilidad.";
+const whatsappUrl = `https://wa.me/573003996801?text=${encodeURIComponent(whatsappMessage)}`;
+
+const consultationMessages: Record<string, string> = {
+  "Ortodoncia invisible":
+    "Hola Dr. Humberto Salleg, quiero agendar una valoracion para ortodoncia invisible. Me gustaria saber si soy candidato y conocer las opciones de tratamiento.",
+  "Diseño de sonrisa":
+    "Hola Dr. Humberto Salleg, quiero agendar una valoracion para diseño de sonrisa. Me interesa mejorar la estetica de mi sonrisa con una orientacion profesional.",
+  Ortodoncia:
+    "Hola Dr. Humberto Salleg, quiero agendar una consulta de ortodoncia para evaluar mi caso y recibir una recomendacion profesional.",
+  "Valoracion estetica":
+    "Hola Dr. Humberto Salleg, quiero agendar una valoracion estetica dental y conocer que alternativas se ajustan a mi sonrisa.",
+  Seguimiento:
+    "Hola Dr. Humberto Salleg, quiero solicitar una cita de seguimiento y confirmar disponibilidad.",
+};
+
+const consultationReasons = Object.keys(consultationMessages);
+type HeroPhoto = "default" | "editorial" | "consultation";
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "Dentist",
@@ -91,6 +113,12 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [frontPhoto, setFrontPhoto] = useState<HeroPhoto>("default");
+  const [expandedPhoto, setExpandedPhoto] = useState<HeroPhoto | null>(null);
+  const [contactReason, setContactReason] = useState("Ortodoncia invisible");
+  const [contactMessage, setContactMessage] = useState(
+    consultationMessages["Ortodoncia invisible"],
+  );
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -99,7 +127,66 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const animatedElements = document.querySelectorAll<HTMLElement>("[data-luxury-reveal]");
+
+    if (!("IntersectionObserver" in window)) {
+      animatedElements.forEach((element) => element.classList.add("is-visible"));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.18 },
+    );
+
+    animatedElements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, []);
+
   const closeMenu = () => setMenuOpen(false);
+  const handleHeroPhoto = (photo: HeroPhoto) => {
+    if (frontPhoto === photo) {
+      setExpandedPhoto((current) => (current === photo ? null : photo));
+      return;
+    }
+
+    setFrontPhoto(photo);
+    setExpandedPhoto(null);
+  };
+  const handleReasonChange = (reason: string) => {
+    setContactReason(reason);
+    setContactMessage(consultationMessages[reason] ?? whatsappMessage);
+  };
+  const handleContactSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const message = String(formData.get("message") ?? "").trim();
+    const personalizedMessage = [
+      message || consultationMessages[contactReason],
+      name ? `Nombre: ${name}` : "",
+      email ? `Email: ${email}` : "",
+      `Motivo: ${contactReason}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    window.open(
+      `https://wa.me/573003996801?text=${encodeURIComponent(personalizedMessage)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   return (
     <main>
@@ -107,10 +194,43 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+      <div className="top-info-bar" aria-label="Informacion de contacto y atencion">
+        <a href={whatsappUrl} target="_blank" rel="noreferrer">
+          <span>Tel</span>
+          +57 300 3996801
+        </a>
+        <a href="mailto:hsalleg14@gmail.com">
+          <span>Email</span>
+          hsalleg14@gmail.com
+        </a>
+        <a href="#contacto">
+          <span>Ubicacion</span>
+          Barranquilla, Colombia
+        </a>
+        <span>
+          <span>Horario</span>
+          Atencion con cita previa
+        </span>
+        <div className="top-socials" aria-label="Redes sociales">
+          <a
+            href="https://www.instagram.com/dr.salleg/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Instagram"
+          >
+            IG
+          </a>
+        </div>
+      </div>
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <a className="brand" href="#inicio" aria-label="Ir al inicio">
-          <span>Dr. Humberto Salleg</span>
-          <small>Ortodoncista</small>
+          <Image
+            src="/hs-logo-white.png"
+            alt="Dr. Humberto Salleg Odontologia Estetica"
+            width={1374}
+            height={787}
+            priority
+          />
         </a>
         <nav className="desktop-nav" aria-label="Navegacion principal">
           {navItems.map(([label, id]) => (
@@ -119,7 +239,7 @@ export default function Home() {
             </a>
           ))}
         </nav>
-        <a className="header-cta" href="#contacto">
+        <a className="header-cta" href={whatsappUrl} target="_blank" rel="noreferrer">
           Agendar consulta
         </a>
         <button
@@ -143,7 +263,7 @@ export default function Home() {
             {label}
           </a>
         ))}
-        <a className="drawer-cta" href="#contacto" onClick={closeMenu}>
+        <a className="drawer-cta" href={whatsappUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>
           Agendar consulta
         </a>
       </div>
@@ -157,7 +277,7 @@ export default function Home() {
             formacion de posgrado en Ciudad de Mexico y practica clinica en Barranquilla.
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href="#contacto">
+            <a className="primary-button" href={whatsappUrl} target="_blank" rel="noreferrer">
               Agendar consulta
             </a>
             <a className="secondary-button" href="#casos">
@@ -170,24 +290,64 @@ export default function Home() {
             <span>AMO - AAO - WFO - SCO</span>
           </div>
         </div>
-        <div className="hero-visual reveal">
-          <div className="doctor-frame">
-            <div className="portrait-placeholder">
-              <span>HS</span>
-              <small>Fotografia editorial del doctor pendiente</small>
-            </div>
-          </div>
-          <Image
-            src="/dental-studio.png"
-            alt="Consultorio odontologico moderno y luminoso"
-            width={1600}
-            height={960}
-            priority
-          />
+        <div
+          className={`hero-visual reveal ${expandedPhoto ? "has-expanded" : ""}`}
+          data-front={frontPhoto}
+        >
+          <button
+            className={`hero-photo default-frame ${frontPhoto === "default" ? "is-front" : "is-back"} ${
+              expandedPhoto === "default" ? "is-expanded" : ""
+            }`}
+            type="button"
+            onClick={() => handleHeroPhoto("default")}
+            aria-label="Ver retrato principal del doctor"
+          >
+            <Image
+              src="/hero-default-doctor.png"
+              alt="Retrato principal del Dr. Humberto Salleg"
+              width={1080}
+              height={1080}
+              priority
+              unoptimized
+            />
+          </button>
+          <button
+            className={`hero-photo doctor-frame ${frontPhoto === "editorial" ? "is-front" : "is-back"} ${
+              expandedPhoto === "editorial" ? "is-expanded" : ""
+            }`}
+            type="button"
+            onClick={() => handleHeroPhoto("editorial")}
+            aria-label="Ver fotografia editorial del doctor"
+          >
+            <Image
+              className="doctor-portrait"
+              src="/doctor-editorial.png"
+              alt="Retrato editorial del Dr. Humberto Salleg Blanco"
+              width={714}
+              height={760}
+              priority
+            />
+          </button>
+          <button
+            className={`hero-photo consultation-frame ${
+              frontPhoto === "consultation" ? "is-front" : "is-back"
+            } ${expandedPhoto === "consultation" ? "is-expanded" : ""}`}
+            type="button"
+            onClick={() => handleHeroPhoto("consultation")}
+            aria-label="Ver fotografia clinica de consulta"
+          >
+            <Image
+              src="/doctor-consultation.png"
+              alt="Dr. Humberto Salleg durante una consulta odontologica"
+              width={1213}
+              height={1306}
+              priority
+            />
+          </button>
         </div>
       </section>
 
-      <section className="philosophy section" id="sobre-mi">
+      <section className="philosophy section" id="sobre-mi" data-luxury-reveal>
         <div className="section-kicker">Mi filosofia</div>
         <div className="split">
           <div>
@@ -207,7 +367,7 @@ export default function Home() {
         </div>
         <div className="credential-grid">
           {credentials.map((item) => (
-            <article key={item}>
+            <article key={item} data-luxury-reveal>
               <span />
               <p>{item}</p>
             </article>
@@ -215,14 +375,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="specialties section" id="especialidades">
+      <section className="specialties section" id="especialidades" data-luxury-reveal>
         <div className="section-heading">
           <p className="section-kicker">Especialidades</p>
           <h2>Bloques de atencion pensados desde el diagnostico.</h2>
         </div>
         <div className="specialty-layout">
           {specialties.map((item, index) => (
-            <article className={`specialty-card card-${index + 1}`} key={item.title}>
+            <article className={`specialty-card card-${index + 1}`} key={item.title} data-luxury-reveal>
               <p>0{index + 1}</p>
               <h3>{item.title}</h3>
               <span>{item.text}</span>
@@ -232,13 +392,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="treatments section" id="tratamientos">
+      <section className="treatments section" id="tratamientos" data-luxury-reveal>
         <div className="treatment-image">
           <Image
-            src="/dental-studio.png"
-            alt="Espacio odontologico con tecnologia clinica"
-            width={1600}
-            height={960}
+            src="/treatments-doctor.png"
+            alt="Dr. Humberto Salleg realizando una atencion odontologica"
+            width={1083}
+            height={1413}
+            unoptimized
           />
         </div>
         <div>
@@ -254,14 +415,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="process section">
+      <section className="process section" data-luxury-reveal>
         <div className="section-heading">
           <p className="section-kicker">Experiencia</p>
           <h2>Un proceso de atencion claro desde la primera consulta.</h2>
         </div>
         <div className="timeline">
           {process.map(([number, title, text]) => (
-            <article key={number}>
+            <article key={number} data-luxury-reveal>
               <strong>{number}</strong>
               <h3>{title}</h3>
               <p>{text}</p>
@@ -270,7 +431,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="cases section" id="casos">
+      <section className="cases section" id="casos" data-luxury-reveal>
         <div className="case-copy">
           <p className="section-kicker">Casos y resultados</p>
           <h2>Casos clinicos preparados para publicar solo con evidencia real.</h2>
@@ -280,18 +441,28 @@ export default function Home() {
           </p>
         </div>
         <div className="before-after" aria-label="Marcador de posicion para casos clinicos reales">
-          <div>
+          <div className="case-panel has-image">
             <span>Antes</span>
-            <p>Imagen clinica pendiente</p>
+            <Image
+              src="/case-before.png"
+              alt="Imagen clinica inicial antes del tratamiento odontologico"
+              width={1774}
+              height={889}
+            />
           </div>
-          <div>
+          <div className="case-panel has-image">
             <span>Despues</span>
-            <p>Imagen clinica pendiente</p>
+            <Image
+              src="/case-after.png"
+              alt="Imagen clinica final despues del tratamiento odontologico"
+              width={1417}
+              height={1161}
+            />
           </div>
         </div>
       </section>
 
-      <section className="doctor section">
+      <section className="doctor section" data-luxury-reveal>
         <div className="doctor-card">
           <p className="section-kicker">Sobre el doctor</p>
           <h2>Dr. Humberto Daniel Salleg Blanco</h2>
@@ -303,12 +474,14 @@ export default function Home() {
         </div>
         <div className="academic-list">
           {academic.map((item) => (
-            <article key={item}>{item}</article>
+            <article key={item} data-luxury-reveal>
+              {item}
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="testimonials section" id="testimonios">
+      <section className="testimonials section" id="testimonios" data-luxury-reveal>
         <div>
           <p className="section-kicker">Testimonios</p>
           <h2>La confianza debe publicarse con nombres, permisos y palabras reales.</h2>
@@ -321,28 +494,39 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="consultorio section">
-        <Image
-          src="/dental-studio.png"
-          alt="Referencia visual de consultorio boutique"
-          width={1600}
-          height={960}
-        />
+      <section className="consultorio section" data-luxury-reveal>
+        <video
+          className="consultorio-video"
+          src="/consultorio-video.mp4"
+          controls
+          playsInline
+          preload="metadata"
+          poster="/dental-studio.png"
+          aria-label="Video del consultorio y atencion odontologica"
+        >
+          <track
+            kind="captions"
+            src="/consultorio-video-captions.vtt"
+            srcLang="es"
+            label="Español"
+            default
+          />
+        </video>
         <div>
           <p className="section-kicker">Consultorio</p>
           <h2>Un entorno pensado para privacidad, limpieza y calma.</h2>
           <p>
-            Sustituye esta imagen por fotografias reales del consultorio para reforzar tecnologia,
-            cercania y experiencia del paciente.
+            Un espacio de atencion pensado para reforzar tecnologia, cercania y experiencia del
+            paciente.
           </p>
         </div>
       </section>
 
-      <section className="final-cta section">
+      <section className="final-cta section" data-luxury-reveal>
         <p>Tu sonrisa merece una atencion diferente.</p>
         <h2>Agenda una valoracion profesional y recibe una orientacion clara.</h2>
         <div className="hero-actions">
-          <a className="primary-button" href="#contacto">
+          <a className="primary-button" href={whatsappUrl} target="_blank" rel="noreferrer">
             Agendar consulta
           </a>
           <a className="secondary-button" href="mailto:hsalleg14@gmail.com">
@@ -351,7 +535,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="contact section" id="contacto">
+      <section className="contact section" id="contacto" data-luxury-reveal>
         <div>
           <p className="section-kicker">Contacto</p>
           <h2>Solicita una consulta con el Dr. Humberto Salleg.</h2>
@@ -360,7 +544,7 @@ export default function Home() {
             telefono, direccion exacta, Instagram y horarios quedan preparados para conectar.
           </p>
         </div>
-        <form className="contact-form" onSubmit={(event) => event.preventDefault()}>
+        <form className="contact-form" onSubmit={handleContactSubmit}>
           <label>
             Nombre
             <input type="text" name="name" autoComplete="name" required />
@@ -371,22 +555,37 @@ export default function Home() {
           </label>
           <label>
             Motivo de consulta
-            <select name="reason" defaultValue="Ortodoncia">
-              <option>Ortodoncia</option>
-              <option>Valoracion estetica</option>
-              <option>Seguimiento</option>
+            <select
+              name="reason"
+              value={contactReason}
+              onChange={(event) => handleReasonChange(event.target.value)}
+            >
+              {consultationReasons.map((reason) => (
+                <option key={reason}>{reason}</option>
+              ))}
             </select>
           </label>
           <label>
             Mensaje
-            <textarea name="message" rows={4} />
+            <textarea
+              name="message"
+              rows={4}
+              value={contactMessage}
+              onChange={(event) => setContactMessage(event.target.value)}
+            />
           </label>
-          <button type="submit">Solicitar orientacion</button>
+          <button type="submit">Enviar por WhatsApp</button>
           <a href="mailto:hsalleg14@gmail.com">hsalleg14@gmail.com</a>
         </form>
       </section>
 
-      <a className="whatsapp-float" href="#contacto" aria-label="Solicitar WhatsApp">
+      <a
+        className="whatsapp-float"
+        href={whatsappUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Solicitar consulta por WhatsApp"
+      >
         WhatsApp
       </a>
 
@@ -408,7 +607,16 @@ export default function Home() {
             </p>
             <div className="quick-replies">
               {quickReplies.map((reply) => (
-                <a href={reply === "Hablar con alguien" ? "mailto:hsalleg14@gmail.com" : "#contacto"} key={reply}>
+                <a
+                  href={
+                    reply === "Agendar consulta" || reply === "Hablar con alguien"
+                      ? whatsappUrl
+                      : "#contacto"
+                  }
+                  target={reply === "Agendar consulta" || reply === "Hablar con alguien" ? "_blank" : undefined}
+                  rel={reply === "Agendar consulta" || reply === "Hablar con alguien" ? "noreferrer" : undefined}
+                  key={reply}
+                >
                   {reply}
                 </a>
               ))}

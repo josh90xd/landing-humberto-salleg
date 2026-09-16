@@ -31,7 +31,19 @@ const path = require("node:path");
 
     const title = await page.title();
     const h1 = await page.locator("h1").innerText();
-    await page.locator(".primary-button").filter({ visible: true }).first().click();
+    const defaultFront = await page.locator(".default-frame").evaluate((node) =>
+      node.classList.contains("is-front"),
+    );
+    await page.locator(".consultation-frame").click();
+    const consultationFront = await page.locator(".consultation-frame").evaluate((node) =>
+      node.classList.contains("is-front"),
+    );
+    await page.locator(".consultation-frame").click();
+    const consultationExpanded = await page.locator(".consultation-frame").evaluate((node) =>
+      node.classList.contains("is-expanded"),
+    );
+    const agendaHref = await page.locator(".primary-button").filter({ visible: true }).first().getAttribute("href");
+    await page.locator("#contacto").scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
     const contactVisible = await page.locator("#contacto").isVisible();
     await page.locator(".chat-toggle").click();
@@ -39,8 +51,15 @@ const path = require("node:path");
     const whatsappVisible = await page.locator(".whatsapp-float").isVisible();
     await page.locator('input[name="name"]').fill("QA Test");
     await page.locator('input[name="email"]').fill("qa@example.com");
-    await page.locator('textarea[name="message"]').fill("Revision de formulario");
+    await page.locator('select[name="reason"]').selectOption("Diseño de sonrisa");
+    const personalizedMessage = await page.locator('textarea[name="message"]').inputValue();
+    const popupPromise = page.waitForEvent("popup").catch(() => null);
     await page.locator(".contact-form button").click();
+    const popup = await popupPromise;
+    const submitRedirect = popup ? popup.url() : null;
+    if (popup) {
+      await popup.close();
+    }
     const formStillVisible = await page.locator(".contact-form").isVisible();
     let drawerVisible = null;
 
@@ -57,6 +76,12 @@ const path = require("node:path");
       viewport: viewport.name,
       title,
       h1,
+      defaultFront,
+      consultationFront,
+      consultationExpanded,
+      agendaHref,
+      personalizedMessage,
+      submitRedirect,
       contactVisible,
       chatVisible,
       whatsappVisible,
