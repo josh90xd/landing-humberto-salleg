@@ -230,6 +230,7 @@ export default function Home() {
             width={1374}
             height={787}
             priority
+            unoptimized
           />
         </a>
         <nav className="desktop-nav" aria-label="Navegacion principal">
@@ -326,6 +327,7 @@ export default function Home() {
               width={714}
               height={760}
               priority
+              unoptimized
             />
           </button>
           <button
@@ -342,6 +344,7 @@ export default function Home() {
               width={1213}
               height={1306}
               priority
+              unoptimized
             />
           </button>
         </div>
@@ -448,6 +451,7 @@ export default function Home() {
               alt="Imagen clinica inicial antes del tratamiento odontologico"
               width={1774}
               height={889}
+              unoptimized
             />
           </div>
           <div className="case-panel has-image">
@@ -457,6 +461,7 @@ export default function Home() {
               alt="Imagen clinica final despues del tratamiento odontologico"
               width={1417}
               height={1161}
+              unoptimized
             />
           </div>
         </div>
