@@ -53,7 +53,8 @@ function rewriteForProjectPages(html) {
     .replaceAll("\\u0022/case-", `\\u0022${siteBase}/case-`)
     .replaceAll("\\u0022/treatments-", `\\u0022${siteBase}/treatments-`)
     .replaceAll("\\u0022/dental-", `\\u0022${siteBase}/dental-`)
-    .replaceAll("\\u0022/consultorio-", `\\u0022${siteBase}/consultorio-`);
+    .replaceAll("\\u0022/consultorio-", `\\u0022${siteBase}/consultorio-`)
+    .replaceAll(`${siteBase}${siteBase}/`, `${siteBase}/`);
 }
 
 async function rewriteCssAssets(dir) {
@@ -91,7 +92,8 @@ async function rewriteCssAssets(dir) {
         .replaceAll('"/dental-', `"${siteBase}/dental-`)
         .replaceAll("`/dental-", `\`${siteBase}/dental-`)
         .replaceAll('"/consultorio-', `"${siteBase}/consultorio-`)
-        .replaceAll("`/consultorio-", `\`${siteBase}/consultorio-`);
+        .replaceAll("`/consultorio-", `\`${siteBase}/consultorio-`)
+        .replaceAll(`${siteBase}${siteBase}/`, `${siteBase}/`);
 
       await writeFile(entryPath, rewritten);
     }),
