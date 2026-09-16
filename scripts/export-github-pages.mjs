@@ -67,13 +67,30 @@ async function rewriteCssAssets(dir) {
         return;
       }
 
-      if (!entry.name.endsWith(".css")) return;
+      if (!entry.name.endsWith(".css") && !entry.name.endsWith(".js")) return;
 
-      const css = await readFile(entryPath, "utf8");
-      const rewritten = css
+      const source = await readFile(entryPath, "utf8");
+      const rewritten = source
         .replaceAll('url("/', `url("${siteBase}/`)
         .replaceAll("url('/", `url('${siteBase}/`)
-        .replaceAll("url(/", `url(${siteBase}/`);
+        .replaceAll("url(/", `url(${siteBase}/`)
+        .replaceAll('"/_next/', `"${siteBase}/_next/`)
+        .replaceAll("`/_next/", `\`${siteBase}/_next/`)
+        .replaceAll("'/_next/", `'${siteBase}/_next/`)
+        .replaceAll('"/hs-', `"${siteBase}/hs-`)
+        .replaceAll("`/hs-", `\`${siteBase}/hs-`)
+        .replaceAll('"/hero-', `"${siteBase}/hero-`)
+        .replaceAll("`/hero-", `\`${siteBase}/hero-`)
+        .replaceAll('"/doctor-', `"${siteBase}/doctor-`)
+        .replaceAll("`/doctor-", `\`${siteBase}/doctor-`)
+        .replaceAll('"/case-', `"${siteBase}/case-`)
+        .replaceAll("`/case-", `\`${siteBase}/case-`)
+        .replaceAll('"/treatments-', `"${siteBase}/treatments-`)
+        .replaceAll("`/treatments-", `\`${siteBase}/treatments-`)
+        .replaceAll('"/dental-', `"${siteBase}/dental-`)
+        .replaceAll("`/dental-", `\`${siteBase}/dental-`)
+        .replaceAll('"/consultorio-', `"${siteBase}/consultorio-`)
+        .replaceAll("`/consultorio-", `\`${siteBase}/consultorio-`);
 
       await writeFile(entryPath, rewritten);
     }),
